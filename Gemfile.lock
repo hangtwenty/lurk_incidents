@@ -24,6 +24,7 @@ GEM
     nokogiri (1.6.8.1)
       mini_portile2 (~> 2.1.0)
     ntlm-http (0.1.1)
+    shoulda-context (1.2.1)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
@@ -36,6 +37,7 @@ DEPENDENCIES
   colorize
   mechanize
   nokogiri
+  shoulda-context
 
 BUNDLED WITH
    1.13.2
