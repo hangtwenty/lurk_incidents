@@ -53,15 +53,15 @@ ok and looking forward to [Chartkick](http://chartkick.com/) / [Groupdate](https
 - group_by_hour_of_day -- any tendencies in time of day?
 - ok using the TextRank idea, can I group incidents by certain keywords, then do a chart that shows how long certain keywords take to resolve?
 
-so. I think I'll make a class with fields on these points.
+so. I think I'll make a class with fields on these points. some pseudocode:
 
     start<DateTime>     (.created_at || .incident_updates[<earliest>].created_at )
     end<DateTime>       (.resolved_at)
-    length()            ^ calculated from those.
+    finished            [ this one is very pragmatic: we want to filter out anything that does not have status of 'resolved' or 'postmortem' ... or that doesn't have an end ... (don't include an incident ongoing at the time the script was run]
+    duration()          ^ calculated from start/end.
     
     impact              ( .impact_override || .impact )
     scheduled           ( .title.contains('planned').or.contains('scheduled') || `!.scheduled_*.nil?`)
-    tweeted             ( .twitter* )
 
     updates             ... could keep the list of updates ... as mentioned earlier could be cool to do fancy overlay graphing of timelines, but ...
         .count          ... just count for now :) that will work for initial graphing
@@ -69,8 +69,11 @@ so. I think I'll make a class with fields on these points.
     blurb               ( .postmortem_body + .incident_updates.body[].join )
     keywords            blurb | keyword_extraction()   # use:       https://github.com/domnikl/highscore || https://github.com/louismullie/graph-rank
 
-    status              [ ONLY keep those that are resolved || postmortem ... ]
+    publicized          [tweeted ( .twitter* ) ]
+
+in python I'd make a base class... then a subclass for the json-backed version (and leave open the possibility of a subclass for an HTML-scraping version, JIC some people have the '.json' disabled on their StatusPages). in ruby, what would be preferred? base class, plus composition - i mean, is this really a case where that kind of indirection is necessary? its seems like one spot where inheritance might be the KISS way ...
+
+hmm yeah actually, this could be even more generic than just StatusPage.io, with a bit of data massaging. I really am just targeting StatusPage.io for now but it's neat that I can structure this in a generally useful way, I'd like to keep that.
 
 ----
-
-okee next step tho is to just save all the incident json to a folder so I can stop hitting them each time I run the script!
+- 

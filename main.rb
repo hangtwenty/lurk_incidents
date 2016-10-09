@@ -7,7 +7,7 @@ require 'uri'
 
 require './util.rb'
 
-TARGET = URI('https://status.shopify.com/history')      # TODO make this come in from a CLI arg (use docopt)
+TARGET = URI('http://metastatuspage.com/history')      # TODO make this come in from a CLI arg (use docopt)
 puts "[.] TARGET = ".green + TARGET.host.white
 
 agent = Mechanize.new
@@ -17,6 +17,10 @@ links_incidents = page.links.select { |link|
     is_same_host = link.uri.host.nil? || link.uri.host == TARGET.host
     is_same_host && link.uri.path.start_with?('/incidents/') 
 }.uniq
+
+# FIXME ---- the cache should have a subdir for the host... so you don't have to manually wipe the dir each time ...
+# FIXME ---- the cache should have a subdir for the host... so you don't have to manually wipe the dir each time ...
+# FIXME ---- the cache should have a subdir for the host... so you don't have to manually wipe the dir each time ...
 
 my_parent_dir = File.expand_path(File.dirname(__FILE__))
 cache_dir = File.join(my_parent_dir, "cache")
@@ -33,6 +37,8 @@ incidents_uris = links_incidents.collect { |link|
     uri.path = uri.path + ".json"
     uri
 }
+
+# FIXME ---- the filename should be "incident_#{uuid}" just cos namespacing is good
 
 puts "[.] gathering incidents.".green
 # 'get or create' the data blob for each incident... just to be polite if I run this script many times.
@@ -60,9 +66,7 @@ incidents_data = incidents_uris.collect { |uri|
     data
 }
 
-puts incidents_data
-
 incidents_data.each { |obj|
-    puts JSON.parse obj
+    puts JSON.pretty_generate( JSON.parse obj )
 }
 
