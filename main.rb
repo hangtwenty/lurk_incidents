@@ -29,5 +29,7 @@ incidents_json = links_incidents.collect { |link|
     JSON.parse(agent.get(uri.to_s).content)
 }
 
-puts incidents_json
+incidents_json.each { |obj|
+    puts JSON.pretty_generate obj
+}
 
