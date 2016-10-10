@@ -36,6 +36,7 @@ if settings["politeness"]
 end
 #=== settings ===
 
+puts "[.] GATHERING. ".green
 puts "[.] requesting ".green + TARGET.to_s
 agent = Mechanize.new
 page = agent.get TARGET
@@ -96,6 +97,8 @@ incidents_data = incidents_uris.collect { |uri|
   data
 }
 
+puts "[.] GATHERING done. ".green
+puts "[.] PROCESSING. ".green
 
 
 # TODO review this way of doing the classes/subclasses ... 
@@ -105,62 +108,69 @@ incidents_data = incidents_uris.collect { |uri|
 # but you could easily code a class that subclasses or is just a 'duck' w/ same methods, that works on HTML/scrape.
 class Incident
 
-  STATUSES_RESOLVED = ["resolved", "postmortem"]
+  STATUSES_RESOLVED = ["completed", "resolved", "postmortem"]
 
   # Initialize with data, e.g. a hash parsed from StatusPage /incidents/#{uuid}.json.
   def initialize( data )
     @data = data
   end
 
+  # unique hash-id from statuspage. from json.
   def uuid
-    return @data["id"]
+    @data["id"]
   end
 
-  def created_at
-    return DateTime.parse(@data["created_at"])
+  # when the incident started
+  def started_at
+    DateTime.parse(@data["created_at"])
   end
 
-  def is_resolved
-    marked_resolved = STATUSES_RESOLVED.include? @data["status"].downcase
-    has_resolved_time = !@data["resolved_at"].nil?
-    return marked_resolved && has_resolved_time
+  # status field.
+  def status
+    @data["status"].downcase
   end
 
-  def resolved_at
-    return is_resolved && DateTime.parse(@data["resolved_at"])
+  # is resolved/completed/postmortem. anything meaning "not still changing."
+  def is_ended
+    STATUSES_RESOLVED.include? status
   end
 
-  def duration
-    return resolved_at - created_at
+  # when the incident ended, if it did...
+  def ended_at
+    if is_ended
+      # edge case I've seen & want to handle: incident has really ended, 
+      # and it's marked 'resolved', but only have 'updated_at' ...
+      # Since we already know it's marked resolved, take the earlier one.
+      resolved_at = @data["resolved_at"] && DateTime.parse(@data["resolved_at"])
+      updated_at = @data["updated_at"] && DateTime.parse(@data["updated_at"])
+      if resolved_at and updated_at
+        return [resolved_at, updated_at].min
+      else
+        return updated_at || resolved_at
+      end
+    else
+      return nil
+    end
   end
 
-  # for purposes here, @data is way too much info, so print (almost) everything else
+  # time between start and end, in seconds.
+  def duration_seconds
+    if started_at && ended_at
+      # subtracting two DateTimes returns time in days. convert to seconds.
+      ((ended_at - started_at) * 24 * 60 * 60).to_i
+    else
+      nil
+    end
+  end
+
+  # inspect most vital fields, do NOT print whole @data again :)
   def inspect
-    "Incident(uuid: #{uuid}, created_at: #{created_at}," +
-    "resolved_at: #{resolved_at}, duration: #{duration}, ...)"
+    "Incident(uuid: #{uuid}, status: #{status}, started_at: #{started_at}, " +
+    "ended_at: #{ended_at}, duration_seconds: #{duration_seconds}, ...)"
   end
 end 
       
 
-####end<DateTime>       (.resolved_at)
-####finished            [ this one is very pragmatic: we want to filter out anything that does not have status of 'resolved' or 'postmortem' ... or that doesn't have an end ... (don't include an incident ongoing at the time the script was run]
-####duration()          ^ calculated from start/end.
-####
-####impact              ( .impact_override || .impact )
-####scheduled           ( .title.contains('planned').or.contains('scheduled') || `!.scheduled_*.nil?`)
-
-####updates             ... could keep the list of updates ... as mentioned earlier could be cool to do fancy overlay graphing of timelines, but ...
-####    .count          ... just count for now :) that will work for initial graphing
-
-####blurb               ( .postmortem_body + .incident_updates.body[].join )
-####keywords            blurb | keyword_extraction()   # use:       https://github.com/domnikl/highscore || https://github.com/louismullie/graph-rank
-
-####publicized          [tweeted ( .twitter* ) ]
-####start<DateTime>     (.created_at || .incident_updates[<earliest>].created_at )
-####end<DateTime>       (.resolved_at)
-####finished            [ this one is very pragmatic: we want to filter out anything that does not have status of 'resolved' or 'postmortem' ... or that doesn't have an end ... (don't include an incident ongoing at the time the script was run]
-####duration()          ^ calculated from start/end.
-####
 ####impact              ( .impact_override || .impact )
 ####scheduled           ( .title.contains('planned').or.contains('scheduled') || `!.scheduled_*.nil?`)
 
@@ -176,11 +186,11 @@ incidents = incidents_data.collect { |s|
     #puts JSON.pretty_generate( JSON.parse obj )
     Incident.new JSON.parse(s)
 }.select { |incident| 
-  if !incident.is_resolved
-    puts "[!] dropping incident #{incident.uuid}, not resolved"
+  if !incident.is_ended
+    puts "[!] dropping incident #{incident.uuid}, has not ended. ".red + incident.inspect
     nil
   else
-    incident.is_resolved
+    incident.is_ended
   end
 }
 

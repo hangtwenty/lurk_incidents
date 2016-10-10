@@ -75,6 +75,13 @@ in python I'd make a base class... then a subclass for the json-backed version (
 
 hmm yeah actually, this could be even more generic than just StatusPage.io, with a bit of data massaging. I really am just targeting StatusPage.io for now but it's neat that I can structure this in a generally useful way, I'd like to keep that.
 
+
+----
+
+mmm should probably also have a separate 'components-affected' field, this could be used for grouping/coloring different graphs ...
+anyway, ASIDE FROM THAT, add the 'components-affected' words onto 'keywords' cos that makes sense.
+
 ----
 
 IDEA, snoozing: after done with all the charts and stuff, well it could be cool to  take in *multiple* targets at once, so then one could overlay the graphs and such from several statuspages ... could be cool to see how companies vary in duration of outage ... or if/not they are similar in shortening the duration over time ... well anyway while a novel idea, it would have its own problems, and it doesn't seem worth the effort yet. snooze.
+
