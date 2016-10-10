@@ -19,9 +19,26 @@ class Incident
     @data["id"]
   end
 
-  # when the incident started
+  # when the incident started. picks earliest of several options.
+  # (this is more squirrely than you'd think... see tricky_start_time fixture)
   def started_at
-    DateTime.parse(@data["created_at"])
+    choices = [
+      DateTime.parse(@data["created_at"]),
+      *extract_update_datetimes
+    ]
+    choices.min
+  end
+
+  # bit brutally, go through all incident_updates, slurp up all datetimes
+  def extract_update_datetimes 
+    @data['incident_updates'].map{|update|[
+      update["created_at"],
+      update["display_at"],
+      update["twitter_updated_at"],
+      update["updated_at"],
+    ]}.flatten.reject(&:nil?).map{|it|
+      DateTime.parse(it)
+    }
   end
 
   # status field.
@@ -35,6 +52,7 @@ class Incident
   end
 
   # when the incident ended, if it did...
+  # FIXME(hangtwenty) does this need some kinda update to the effect of started_at
   def ended_at
     if is_ended
       # edge case I've seen & want to handle: incident has really ended, 
