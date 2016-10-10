@@ -52,14 +52,22 @@ class Incident
     end
   end
 
-  # time between start and end, in seconds.
+  # time between start and end, in seconds
   def duration_seconds
     if started_at && ended_at
       # subtracting two DateTimes returns time in days. convert to seconds.
-      ((ended_at - started_at) * 24 * 60 * 60).to_i
+      ((ended_at - started_at) * 24 * 60 * 60)
     else
       nil
     end
+  end
+
+  def duration_minutes
+    duration_seconds / 60
+  end
+
+  def duration_hours
+    duration_minutes / 60
   end
 
   # inspect most vital fields, do NOT print whole @data again :)

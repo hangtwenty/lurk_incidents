@@ -8,15 +8,22 @@ require 'uri'
 # third party
 require 'chartkick'
 
+# my repo
+require_relative '../config.rb'
+require_relative '../fetch.rb'
+require_relative '../incident.rb'
+
+
 get '/' do
-  @data = {'Foo' => 70, 'Bar' => 15, 'Baz' => 13, 'quux' => 2}
+  @target_url = LurkConfig.default_target_url
+  @data = nil
   erb :index
 end
 
 post '/' do
   param :target_url,    String, required: true, format: URI.regexp, raise: true
   @target_url = params[:target_url]
-  @data = {'Foo' => 70, 'Bar' => 15, 'Baz' => 13, 'TARGET' => 2}
+  @incidents = get_incidents(@target_url)
   erb :index
 end
   

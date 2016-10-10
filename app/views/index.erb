@@ -1,11 +1,35 @@
+  colors: ["pink", "#999"]
 <div>
-  <p>
-    <%= pie_chart(@data) %>
-  </p>
-  <p>target: <%= @target_url %></p>
+  <% if @incidents %>
+    <p>
+      <h1>Total reported downtime per month</h1>
+      <h3>bit misleading: does not group by components; TODO - change that?</h3>
+        <%= 
+          bar_chart(
+            @incidents.group_by{|item| 
+              "#{item.started_at.year}-#{item.started_at.month}-28"
+            }.map{|key, group_of_incidents| 
+              [key, group_of_incidents.map(&:duration_hours).inject(:+)]
+            },
+            height: "500px"
+          )
+        %>
+    </p>
+    <p>
+      <h1>Every incident - duration in seconds</h1>
+        <%= 
+          bar_chart(@incidents.group_by(&:uuid).map{|key, group_of_incidents| 
+              [key, group_of_incidents.map(&:duration_seconds)]
+          }, width: "100%", height: "2000px")
+        %>
+    </p>
+  <% else %>
+    <p>No data yet. Punch in target URL and submit.</p>
+  <% end %>
 </div>
 <div>
   <form method="POST" action="/">
-    <p>Target:<input type="text" name="target_url" value="https://status.shopify.com"></p>
+    <p>Target:<input type="text" name="target_url" value="<%= @target_url %>"></p>
+    <input type="submit" value="Fetch all incidents (can take a minute)">
   </form>
 </div>
