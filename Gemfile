@@ -10,6 +10,7 @@ gem 'mechanize'
 # charts/app only
 gem "chartkick"
 gem "sinatra"
+gem "sinatra-param"
 
 # test only
 gem 'minitest' 

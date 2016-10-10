@@ -33,6 +33,8 @@ GEM
       rack (~> 1.5)
       rack-protection (~> 1.4)
       tilt (>= 1.3, < 3)
+    sinatra-param (1.4.0)
+      sinatra (~> 1.3)
     tilt (2.0.5)
     unf (0.1.4)
       unf_ext
@@ -49,6 +51,7 @@ DEPENDENCIES
   minitest
   nokogiri
   sinatra
+  sinatra-param
 
 BUNDLED WITH
    1.13.2
