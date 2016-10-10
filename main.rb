@@ -57,8 +57,6 @@ incidents_uris = links_incidents.collect { |link|
   uri
 }
 
-# FIXME ---- the filename should be "incident_#{uuid}" just cos namespacing is good
-
 puts "[.] gathering incidents.".green
 # 'get or create' the data blob for each incident... just to be polite if I run this script many times.
 # ASSUMPTION: it is OK to cache the incident data blobs, because incidents in the past should not get updates.
