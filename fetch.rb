@@ -5,6 +5,7 @@ require 'uri'
 require 'colorize'
 require 'mechanize'
 
+require './config.rb'
 
 # little factory for mechanize agent w/ polite user-agent
 def get_mechanize_agent
