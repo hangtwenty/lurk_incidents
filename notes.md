@@ -83,5 +83,13 @@ anyway, ASIDE FROM THAT, add the 'components-affected' words onto 'keywords' cos
 
 ----
 
+TODO -- in `get_incidents_data`, there is a little edge case that would be nice to handle
+
+      # FIXME handle edge case -- after fetching the incident, should eagerly json-parse to check if it has been resolved... if not, DO NOT cache it. in fact, entirely discard it.
+      # it wouldn't make sense if you ran this script while an incident was in progress, then permanently saved its intermediate, unresolved state.
+
+
+----
+
 IDEA, snoozing: after done with all the charts and stuff, well it could be cool to  take in *multiple* targets at once, so then one could overlay the graphs and such from several statuspages ... could be cool to see how companies vary in duration of outage ... or if/not they are similar in shortening the duration over time ... well anyway while a novel idea, it would have its own problems, and it doesn't seem worth the effort yet. snooze.
 
