@@ -19,6 +19,50 @@ class Incident
     @data["id"]
   end
 
+  # status field.
+  def status
+    @data["status"].downcase
+  end
+
+  # enum/string of impact.
+  # statuspage says these are the values:
+  #   None (black)
+  #   Minor (yellow)
+  #   Major (orange)
+  #   Critical (red)
+  #   Maintenance (black)
+  def impact
+    (@data["impact_override"] || @data["impact"] || "None").downcase
+  end
+
+  # this is homespun but, just devising a way to graph impacts
+  # statuspage says these are the values:
+  #   None (black)
+  #   Minor (yellow)
+  #   Major (orange)
+  #   Critical (red)
+  #   Maintenance (black)
+  def impact_rank
+    #numbers picked rather wantonly from fibonacci sequence
+    case impact.downcase
+      when "critical"
+        34
+      when "major"
+        13
+      when "minor"
+        5
+      when "maintenance"
+        1
+      else
+        0
+    end 
+  end
+
+  # is resolved/completed/postmortem. anything meaning "not still changing."
+  def is_ended
+    STATUSES_RESOLVED.include? status
+  end
+
   # when the incident started. picks earliest of several options.
   # (this is more squirrely than you'd think... see tricky_start_time fixture)
   def started_at
@@ -41,14 +85,14 @@ class Incident
     }
   end
 
-  # status field.
-  def status
-    @data["status"].downcase
+  # since I have done this a number of times, and it can look a little cryptic
+  def started_month_name
+    started_at.strftime("%m - %b")
   end
 
-  # is resolved/completed/postmortem. anything meaning "not still changing."
-  def is_ended
-    STATUSES_RESOLVED.include? status
+  # i.e. week 47, week 52 etc. Starting from Sunday.
+  def started_week_number
+    started_at.strftime("%U")
   end
 
   # when the incident ended, if it did...

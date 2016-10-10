@@ -1,26 +1,20 @@
+<!-- WARNING, this is a total dumpster for now. or more accurately a sandbox. please don't judge ... I'm just prototyping!!! -->
 <h1>lurk_incidents</h1>
-<h4>... is a mess, but hey, I'm having fun</h4>
-<div class="row">
-  <div class="col-sm-6">
-      <form method="POST" action="/">
-        <div class="form-group">
-          
-        <label for="target-url">Target URL</label>
-        <input type="email" class="form-control" id="target-url" placeholder="enter URL" value="<%= @target_url || "enter URL" %>">
-        
-        <p><em>Fetching will take a minute if the target is not in the cache (yet). Faster after caching.</em></p>
-        <input type="submit" class="btn btn-default" value="Fetch all incidents">
-      </form>
-  </div>
-  <div class="col-sm-2">
-  </div>
-</div>
+<p><em>Fetching will take a minute if the target is not in the cache (yet). Faster after caching.</em></p>
+  <form method="POST" action="/">
+    <div class="form-group">
+      
+    <label for="target-url">Target URL</label>
+    <input type="email" class="form-control" id="target-url" placeholder="enter URL" value="<%= @target_url || "enter URL" %>">
+    
+    <input type="submit" class="btn btn-default" value="Fetch all incidents">
+  </form>
 <hr/>
 <% if @incidents %>
   <div class="row">
     <div class="col-sm-12">
       <h1>Total reported downtime per month</h1>
-      <h3>bit misleading: does not group by components; TODO - change that?</h3>
+      <h4>I think this is a bit too coarse to be useful, but... just starting here...</h4>
       <%= 
         bar_chart(
           @incidents.group_by{|item| 
@@ -52,35 +46,119 @@
         <h1>Let's try overlaying years</h1>
         <p>Maybe it will show some consistent fluctuations with the seasons. (Highest outliers removed.)</h3>
         <h4>sum of hours per day-of-year</h4>
-
-        <h5>now excluding high-outliers (shows more detail)</h5>
+        <h5>excluding very long durations so the graph doesn't get stretched</h5>
         <%= 
-            scatter_chart(@incidents_exclude_long.group_by{|x| x.started_at.year}.map{|label, incidents_by_year| 
+            scatter_chart(@incidents_exclude_long.group_by{|x| x.started_at.year}.map{|legend_label, incidents_by_year| 
                 {
-                    name: label, 
+                    name: legend_label, 
                     # XXX(hangtwenty) I kept trying (and failing) to group_by #{x.started_at.month}-#{x.started_at.day} or even index,
                     # and kept winding up with total soup on the Chartkick side... but ... #yday to the rescue! (day of year as a number)
-                    data: incidents_by_year.group_by{|x| "#{x.started_at.yday}"}.map{|label, incidents_this_day|
-                        [label, incidents_this_day.map{|inc| inc.duration_hours.to_f}.sum]
-                    }
+                    data: incidents_by_year.group_by{|x| x.started_at.yday.to_i}.map{|label, incidents_this_day|
+                        [label, incidents_this_day.map{|incident| incident.duration_hours.to_f}.sum]
+                    }.sort_by{ |key, v| key }.to_h
                 }
           }, width: "100%")
         %>
-
-        <h4>sum of incidents per month</h4>
-        <h5>(no removal of outliers)</h5>
+        <h4>sum of 'impact rank' per week</h4>
+        <h5>outliers not excluded</h5>
+        <h5>only year >= 2015</h5>
         <%= 
-            line_chart(@incidents.group_by{|x| x.started_at.year}.map{|label, incidents_by_year| 
+            bar_chart(
+                @incidents
+                .select{|x| x.started_at.year >= 2015}
+                .group_by{|x| x.started_at.year}
+                .map{|legend_label, incidents_by_year| 
                 {
-                    name: label, 
-                    # XXX(hangtwenty) I kept trying (and failing) to group_by #{x.started_at.month}-#{x.started_at.day} or even index,
-                    # and kept winding up with total soup on the Chartkick side... but ... #yday to the rescue! (day of year as a number)
-                    data: incidents_by_year.group_by{|x| "#{x.started_at.month}"}.map{|label, subgroup|
+                    name: legend_label, 
+                    data: incidents_by_year.group_by{|x| x.started_week_number.to_i}.map{|label, incidents_this_timeframe|
+                        [label, incidents_this_timeframe.map(&:impact_rank).sum]
+                    }.sort_by{ |key, v| key }.to_h
+                }
+          }, width: "100%", height: "1500px")
+        %>
+
+
+        <h1>Let's keep going month-by-month, but sum all years</h1>
+
+        <h4>For each month, sum the 'impact ranks'</h4>
+        <h5>summed per month REGARDLESS of year. also, 2013 is excluded.</h5>
+        <p>items with an extremely high duration (outliers) are a separate line. it looks like they are all low impact. all maintenance? well, it seems like I can go on ignoring those then</p>
+        <%= 
+            line_chart(
+               @incidents
+               .select{|x| x.started_at.year > 2013}
+               .group_by{|x| 
+                 # group by 'high-outlier' or 'not' in terms of duration...
+                 if x.duration_seconds >= @outliers[:duration_seconds_max].min 
+                   "duration is high-outlier"
+                 else
+                   "duration is not outlier"
+                 end
+               }
+               .map{|legend_label, incidents_by_year| 
+                {
+                    name: legend_label, 
+                    data: incidents_by_year.group_by{|x| x.started_month_name}.map{|label, subgroup|
+                        [label, subgroup.map(&:impact_rank).sum]
+                    }.sort_by{ |key, v| key }.to_h
+                }
+          }, width: "100%")
+          %>
+
+        <h4>Count of incidents by month, over years. Grouped by impact.</h4>
+        <h5>summed per month REGARDLESS of year. also, 2013 is excluded.</h5>
+        <h5>exclude 'none' and 'maintenance' impact.</h5>
+        <%= 
+            line_chart(
+               @incidents  
+               .select{|x| x.started_at.year > 2013}
+               .select{|x| !["none", "maintenance"].include? x.impact }
+               .group_by{|x| x.impact}
+               .map{|legend_label, incidents_by_year| 
+                {
+                    name: legend_label, 
+                    data: incidents_by_year.group_by{|x| x.started_month_name}.map{|label, subgroup|
                         [label, subgroup.size]
-                    }
+                    }.sort_by{ |key, v| key }.to_h
                 }
           }, width: "100%")
-        %>
+          
+         %>
+        <h4>count of incidents per month, over years, but ONLY 2015 and up.</h4>
+        <h5>exclude 'none' and 'maintenance' impact.</h5>
+        <%= 
+            line_chart(
+               @incidents  
+               .select{|x| x.started_at.year >= 2015}
+               .select{|x| !["none", "maintenance"].include? x.impact }
+               .group_by{|x| x.impact}
+               .map{|legend_label, incidents_by_year| 
+                {
+                    name: legend_label, 
+                    data: incidents_by_year.group_by{|x| x.started_month_name}.map{|label, subgroup|
+                        [label, subgroup.size]
+                    }.sort_by{ |key, v| key }.to_h
+                }
+          }, width: "100%")
+          
+         %>
+         <%= 
+            bar_chart(
+               @incidents  
+               .select{|x| x.started_at.year >= 2015}
+               .select{|x| !["none", "maintenance"].include? x.impact }
+               .group_by{|x| x.impact}
+               .map{|legend_label, incidents_by_year| 
+                {
+                    name: legend_label, 
+                    data: incidents_by_year.group_by{|x| "#{x.started_at.year} - #{x.started_month_name}"}.map{|label, subgroup|
+                        [label, subgroup.size]
+                    }.sort_by{ |key, v| key }.to_h
+                }
+          }, width: "100%", height: "1500px")
+          
+         %>
+      </div>
     </div>
   </div>
 <% else %>
