@@ -18,7 +18,7 @@ def mkdir_p(path)
 end
 
 # TODO -- make path to config itself configurable via command-line switch.
-settings_path = File.join(Dir.pwd, "lurk_incidents.yml")
+settings_path = File.join(Dir.pwd, "lurk_incidents.yaml")
 settings = YAML.load_file(settings_path)
 TARGET = URI(settings["target"])
 if settings["cache"] && settings["cache"]["enabled"]
