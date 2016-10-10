@@ -1,0 +1,13 @@
+---
+# specify target URL. please include scheme, full hostname, 
+# and path to full incident history (usually just "/history")
+target: "http://metastatuspage.com/history"
+
+cache:
+  enabled: yes         # TODO add support for 'no'
+  directory: "/tmp/lurk_incidents_cache"       # windows users, you'll have to change this
+
+# you probably shouldn't fiddle with these settings, but I obviously cannot stop you...
+politeness:
+  sleep_seconds: 0.2
+  obey_robots_txt: no  # TODO add support for 'yes'

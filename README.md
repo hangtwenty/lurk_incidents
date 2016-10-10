@@ -1,0 +1,2 @@
+- currently I assume you are just cloing this repo then running `ruby main.rb` (I haven't packaged up as a real CLI script, since it feels like a one-off/niche util...)
+- configuration is loaded from `$( pwd )/lurk_incidents.yml`
