@@ -6,12 +6,19 @@
 # and that should work right even in some tricky or suprising cases.
 #
 # this test suite is set up so you can drop in a 'tricky case' verbatim like:
-#       ./test/fixtures/incidents/given/#{uuid}.json
+#       ./test/fixtures/incidents/given/#{unique_name}.json
 # ... and then another one, with JUST the expectations you care about, as
-#       ./test/fixtures/incidents/expected/#{uuid}.yaml (note: YAML!!!)
+#       ./test/fixtures/incidents/expected/#{unique_name}.yaml (note: YAML!!!)
 # and this test suite will pick it up and make sure that we do it right.
 #
-# NOTES on the EXPECTED files!
+# here's an example of copying a fixture case, from the cache to 'given'. prettyprint.
+#   python -m json.tool /tmp/lurk_incidents_cache/metastatuspage.com/lphfkdlhdbbd.json > \
+#     ~/Workspace/lurk_incidents/test/fixtures/incidents/given/major_impact_long_description.json
+# then you'd add a corresponding item with same name in expected.
+#     vim ~/Workspace/lurk_incidents/test/fixtures/incidents/expecte/major_impact_long_description.json
+# and just specify the fields you care about.
+#
+# NOTES on the 'expected' files!
 #   - the "expected"is NOT the statuspage json format, RATHER it corresponds to the `Incident` class.
 #   - YAML! not JSON. made the expected cases as YAML since they are hand-edited and that's easier...
 # ... and all those notes should make sense if you think about 'em :)
