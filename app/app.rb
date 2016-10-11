@@ -42,7 +42,10 @@ end
 post '/' do
   param :target_url,    String, required: true, format: URI.regexp, raise: true
   @target_url = params[:target_url]
+
   @incidents = get_incidents(@target_url)
+
+  # outliers stuff (only used for a couple graphs after all)
   @outliers = {
     :duration_seconds_max => get_outliers(@incidents, :duration_seconds, :max),
     :duration_seconds_min => get_outliers(@incidents, :duration_seconds, :min)
@@ -53,6 +56,7 @@ post '/' do
   @incidents_exclude_short = @incidents.select{|incident|
     !@outliers[:duration_seconds_min].include? incident.duration_seconds
   }
+
   erb :index
 end
   

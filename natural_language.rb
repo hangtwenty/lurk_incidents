@@ -1,15 +1,17 @@
 require 'highscore'
 
+
 # configuration block gets passed to Highscore::Content.new(...).configure
 # (see https://github.com/domnikl/highscore for full options)
 HIGHSCORE_CONFIGURE = lambda {|arg|
   set :ignore_case, true             # => default: false
-  set :stemming, true                # => default: false
+
+  #TODO get stemming back, it cleans things up; but, how to unstem for display?
+  set :stemming, true                # => default: false 
 }
 
-HIGHSCORE_BLACKLIST = Highscore::Blacklist.load([
-    "affect", "component", "incident"
-])
+# TODO(hangtwenty) path to blacklist should be configurable
+HIGHSCORE_BLACKLIST = Highscore::Blacklist.load_file "blacklist.txt"
 
 # example usages:
 #   - play safe w/ facade: `Keywordable.new(s).keywords_strings(top=20)`
@@ -21,18 +23,17 @@ HIGHSCORE_BLACKLIST = Highscore::Blacklist.load([
 class Keywordable
 
   def initialize(text, blacklist=HIGHSCORE_BLACKLIST)
-    @highscore_content = Highscore::Content.new text
+    @highscore_content = Highscore::Content.new(text, blacklist)
     @highscore_content.configure(&HIGHSCORE_CONFIGURE)
-    @blacklist = blacklist
   end
 
   # analyze and return Highscore::Keyword
   def keywords
-    @highscore_content.keywords @blacklist
+    @highscore_content.keywords
   end
 
   # analyze and return keywords like ["foo", "bar", "baz"]
-  def keywords_strings(top=nil)
+  def to_strings(top=nil)
     unless top.nil?
       keywords.top(top).map(&:text)
     else
@@ -41,7 +42,7 @@ class Keywordable
   end
 
   # analyze and return pairs like [("foo", 1.0), ("bar", 0.6)...]
-  def keywords_text_and_rank(top=nil)
+  def to_strings_and_ranks(top=nil)
     unless top.nil?
       keywords.top(top).map{|kw| [kw.text, kw.weight]}
     else
