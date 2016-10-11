@@ -4,31 +4,35 @@
   <form method="POST" action="/">
     <div class="form-group">
       
-    <label for="target-url">Target URL</label>
-    <input type="email" class="form-control" id="target-url" placeholder="enter URL" value="<%= @target_url || "enter URL" %>">
+    <label for="target_url">Target URL</label>
+    <input type="text" class="form-control" id="target_url" name="target_url" placeholder="enter URL" value="<%= @target_url || "enter URL" %>">
     
+    </div>
     <input type="submit" class="btn btn-default" value="Fetch all incidents">
   </form>
 <hr/>
+<div class="alert alert-warning" role="alert">
+    <strong>Just a rough cut. Watch out for bugs related to Chartkick. Sorry about that! </strong>
+    For some status pages, the order and/or grouping gets screwed up ... Mainly seems to be an issue when there are gaps in the timeseries. Seemingly this is normally OK in Chartkick because of relying on the Groupdate library. But since I'm not using Rails or a DB (and Groupdate relies on that) ... sigh, here we are. This is what I get for reaching for a "quick" solution to my charting needs... Oops!
+</div>
 <% if @incidents %>
   <div class="row">
     <div class="col-sm-12">
-      <h1>Total reported downtime per month</h1>
-      <h4>I think this is a bit too coarse to be useful, but... just starting here...</h4>
-      <%= 
-        bar_chart(
-          @incidents.group_by{|item| 
-            "#{item.started_at.year}-#{item.started_at.month}-28"
-          }.map{|key, group_of_incidents| 
-            [key, group_of_incidents.map(&:duration_hours).inject(:+)]
-          },
-          height: "500px"
-        )
-      %>
+        <h1>Ratio of incidents' impacts</h1>
+        <p><em>excluding 'maintenance'</em></p>
+        <h4>All time</h4>
+        <%= pie_chart_impact(2000) %>
+        <h4>2014</h4>
+        <%= pie_chart_impact(2014, max=2014) %>
+        <h4>2015</h4>
+        <%= pie_chart_impact(2015, max=2015) %>
+        <h4>2016 and up</h4>
+        <%= pie_chart_impact(2016, max=2016) %>
     </div>
     <div class="col-sm-12">
-        <h1>Every incident - duration in hours</h1>
-        <p>note, you don't see much detail, because outliers crowd out</p>
+        <h1>Individual incidents - duration in hours</h1>
+        <h5>note, you don't see much detail, because outliers crowd out</h5>
+        <h5>I think this is lossy though, Chartkick or Google Charts quirk maybe?</h5>
         <%= 
           bar_chart(@incidents.group_by(&:uuid).map{|key, group_of_incidents| 
               [key, group_of_incidents.map{|x| x.duration_hours.to_f}]
@@ -44,11 +48,13 @@
     </div>
     <div class="col-sm-12">
         <h1>Let's try overlaying years</h1>
-        <p>Maybe it will show some consistent fluctuations with the seasons. (Highest outliers removed.)</h3>
         <h4>sum of hours per day-of-year</h4>
-        <h5>excluding very long durations so the graph doesn't get stretched</h5>
+        <h5>excluding very long durations (outliers) so the graph doesn't get stretched</h5>
+        <p>Maybe it will show some consistent fluctuations with the seasons. (Highest outliers removed.)</h3>
         <%= 
-            scatter_chart(@incidents_exclude_long.group_by{|x| x.started_at.year}.map{|legend_label, incidents_by_year| 
+            scatter_chart(
+                @incidents_exclude_long
+                .group_by{|x| x.started_at.year}.map{|legend_label, incidents_by_year| 
                 {
                     name: legend_label, 
                     # XXX(hangtwenty) I kept trying (and failing) to group_by #{x.started_at.month}-#{x.started_at.day} or even index,
@@ -59,7 +65,7 @@
                 }
           }, width: "100%")
         %>
-        <h4>sum of 'impact rank' per week</h4>
+        <h4>sum of 'impact rank' per week, grouped by year (to compare year-over-year)</h4>
         <h5>outliers not excluded</h5>
         <h5>only year >= 2015</h5>
         <%= 
@@ -81,18 +87,18 @@
         <h1>Let's keep going month-by-month, but sum all years</h1>
 
         <h4>For each month, sum the 'impact ranks'</h4>
-        <h5>summed per month REGARDLESS of year. also, 2013 is excluded.</h5>
+        <h5>summed per month REGARDLESS of year. 2014 and up.</h5>
         <p>items with an extremely high duration (outliers) are a separate line. it looks like they are all low impact. all maintenance? well, it seems like I can go on ignoring those then</p>
         <%= 
             line_chart(
                @incidents
-               .select{|x| x.started_at.year > 2013}
+               .select{|x| x.started_at.year >= 2014}
                .group_by{|x| 
                  # group by 'high-outlier' or 'not' in terms of duration...
                  if x.duration_seconds >= @outliers[:duration_seconds_max].min 
-                   "duration is high-outlier"
+                   "duration is especially high (outlier)"
                  else
-                   "duration is not outlier"
+                   "the rest"
                  end
                }
                .map{|legend_label, incidents_by_year| 
@@ -103,15 +109,15 @@
                     }.sort_by{ |key, v| key }.to_h
                 }
           }, width: "100%")
-          %>
+        %>
 
-        <h4>Count of incidents by month, over years. Grouped by impact.</h4>
-        <h5>summed per month REGARDLESS of year. also, 2013 is excluded.</h5>
+        <h4>Count of incidents by month, grouped by impact.</h4>
+        <h5>summed per month REGARDLESS of year. 2014 and up.</h5>
         <h5>exclude 'none' and 'maintenance' impact.</h5>
         <%= 
             line_chart(
                @incidents  
-               .select{|x| x.started_at.year > 2013}
+               .select{|x| x.started_at.year >= 2014}
                .select{|x| !["none", "maintenance"].include? x.impact }
                .group_by{|x| x.impact}
                .map{|legend_label, incidents_by_year| 
@@ -123,8 +129,9 @@
                 }
           }, width: "100%")
           
-         %>
-        <h4>count of incidents per month, over years, but ONLY 2015 and up.</h4>
+        %>
+        <h4>count of incidents per month (summing over years)</h4>
+        <h5>this time ONLY 2015 and up.</h5>
         <h5>exclude 'none' and 'maintenance' impact.</h5>
         <%= 
             line_chart(
@@ -140,9 +147,15 @@
                     }.sort_by{ |key, v| key }.to_h
                 }
           }, width: "100%")
-          
-         %>
-         <%= 
+        %>
+        <h4>count of incidents per month again, grouped by impact, but chronological.</h4>
+        <div class="alert alert-danger" role="alert">
+            <strong>Watch out for bugs related to Chartkick.</strong>
+            I noticed them especially with this graph, for some status pages.
+        </div>
+        <p><em>It's a nice one when it works right...</em></p>
+        
+        <%= 
             bar_chart(
                @incidents  
                .select{|x| x.started_at.year >= 2015}
@@ -156,11 +169,10 @@
                     }.sort_by{ |key, v| key }.to_h
                 }
           }, width: "100%", height: "1500px")
-          
          %>
       </div>
     </div>
   </div>
 <% else %>
-  <div class="row">No data yet. Punch in target URL and submit.</div>
+  <h3>No data yet. Punch in target URL and submit.</h3>
 <% end %>

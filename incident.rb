@@ -132,6 +132,7 @@ class Incident
     duration_minutes / 60
   end
 
+
   # inspect most vital fields, do NOT print whole @data again :)
   def inspect
     "Incident(uuid: #{uuid}, status: #{status}, started_at: #{started_at}, " +
@@ -140,13 +141,8 @@ class Incident
 end 
       
 
-####impact              ( .impact_override || .impact )
-####scheduled           ( .title.contains('planned').or.contains('scheduled') || `!.scheduled_*.nil?`)
 
 ####updates             ... could keep the list of updates ... as mentioned earlier could be cool to do fancy overlay graphing of timelines, but ...
-####    .count          ... just count for now :) that will work for initial graphing
 
 ####blurb               ( .postmortem_body + .incident_updates.body[].join )
 ####keywords            blurb | keyword_extraction()   # use:       https://github.com/domnikl/highscore || https://github.com/louismullie/graph-rank
-
-####publicized          [tweeted ( .twitter* ) ]

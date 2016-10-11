@@ -17,12 +17,27 @@ require_relative '../fetch.rb'
 require_relative '../incident.rb'
 require_relative '../stat.rb'
 
+Chartkick.options = {
+  width: "100%",
+  colors: [
+     "#2B879E", #navyish
+     "#98D9B6", #teal1
+     "#CDB380", #terracotta
+     "#A75B38", #dark terracotta
+     "#036564", #'dark teal'?
+     "#79BD9A", #another greenish
+     "#616668", #darkgrey
+     #"#3EC9A7", #teal2
+  ]
+}
+
 
 get '/' do
   @target_url = LurkConfig.default_target_url
   @data = nil
   erb :index
 end
+
 
 post '/' do
   param :target_url,    String, required: true, format: URI.regexp, raise: true
@@ -43,5 +58,16 @@ end
   
 error Sinatra::Param::InvalidParameterError do
   {error: "#{env['sinatra.error'].param} is invalid"}.to_json
+end
+
+def pie_chart_impact(min_year, max_year=3000)
+  # TODO(hangtwenty) move to view-helper? what's that like in Sinatra?
+  pie_chart(
+    @incidents
+    .select{|x| x.started_at.year >= min_year && x.started_at.year <= max_year}
+    .reject{|x| x.impact == "maintenance"}
+    .group_by(&:impact).map{|key, group_of_incidents| 
+      [key, group_of_incidents.size] 
+  })
 end
 
