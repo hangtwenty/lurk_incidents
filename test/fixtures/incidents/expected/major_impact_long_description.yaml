@@ -1,4 +1,5 @@
-narrative: >
+---
+blurb: |
     Errant deploy causing site outage
 
     We had issues with some parts of our infrastructure starting after a deploy. We're working on a fix right now.

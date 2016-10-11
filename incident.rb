@@ -1,5 +1,7 @@
 require 'date'
 
+require './util.rb'
+
 # TODO review this way of doing the classes/subclasses ... 
 # got some analysis paralysis with this, since people talk so much bad about plain old inheritance in ruby... 
 # JFDI but did I do it OK?
@@ -8,6 +10,7 @@ require 'date'
 class Incident
 
   STATUSES_RESOLVED = ["completed", "resolved", "postmortem"]
+  BLURB_SEPARATOR = "\n\n"
 
   # Initialize with data, e.g. a hash parsed from StatusPage /incidents/#{uuid}.json.
   def initialize( data )
@@ -73,16 +76,10 @@ class Incident
     choices.min
   end
 
-  # bit brutally, go through all incident_updates, slurp up all datetimes
-  def extract_update_datetimes 
-    @data['incident_updates'].map{|update|[
-      update["created_at"],
-      update["display_at"],
-      update["twitter_updated_at"],
-      update["updated_at"],
-    ]}.flatten.reject(&:nil?).map{|it|
-      DateTime.parse(it)
-    }
+  # get (raw) updates iterable
+  # TODO(hangtwenty) create 'update' class probably...
+  def updates
+    @data['incident_updates'].map{|it| Update.new it}
   end
 
   # since I have done this a number of times, and it can look a little cryptic
@@ -132,17 +129,97 @@ class Incident
     duration_minutes / 60
   end
 
+  def name
+    @data["name"]
+  end
+
+  # join together plaintext blurbs for all updates 
+  def blurb_updates
+    updates.map(&:body)
+        .reject(&:nil?)
+        .reject(&:blank?)
+        .join(BLURB_SEPARATOR)
+  end
+
+  # join together names and descriptions of components
+  def blurb_components
+    # from API Docs: "key only present if component subscriptions are enabled"
+    if @data.key? "components"
+      @data["components"].map{|comp_data|
+        name = comp_data["name"] || 'unnamed_component'
+        desc = comp_data["description"]
+        if !desc.nil? && !desc.empty?
+          "#{name} (#{desc})"
+        else
+          name
+        end
+      }.reject(&:nil?).join(", ")
+    else
+      ""
+    end
+  end
+
+  # overall plaintext blurb using incident.name, update blurbs, components
+  def blurb
+    [name, blurb_updates, postmortem_body, blurb_components]
+        .reject(&:nil?)
+        .reject(&:blank?)
+        .join(BLURB_SEPARATOR)
+  end
+
+  # direct field from json, 'postmortem_body'
+  def postmortem_body
+    # ^ wow etymology is fun, literal interpretation is such a diff. meaning
+    @data["postmortem_body"] || ""
+  end
 
   # inspect most vital fields, do NOT print whole @data again :)
   def inspect
     "Incident(uuid: #{uuid}, status: #{status}, started_at: #{started_at}, " +
     "ended_at: #{ended_at}, duration_seconds: #{duration_seconds}, ...)"
   end
+
+  private
+    # get all datetimes from all incident.updates
+    def extract_update_datetimes 
+      updates.map(&:all_datetimes).flatten.reject(&:nil?)
+    end
 end 
       
 
+class Update
 
-####updates             ... could keep the list of updates ... as mentioned earlier could be cool to do fancy overlay graphing of timelines, but ...
+  def initialize(update_data)
+    @data = update_data
+  end
+
+  # all datetimes (that I care about)
+  def all_datetimes
+    [created_at, display_at, twitter_updated_at, updated_at]
+  end
+  
+  def created_at
+    datetime_or_nil @data["created_at"]
+  end
+
+  def display_at
+    datetime_or_nil @data["display_at"]
+  end
+
+  def updated_at
+    datetime_or_nil @data["updated_at"]
+  end
+
+  def twitter_updated_at
+    datetime_or_nil @data["twitter_updated_at"]
+  end
+
+  def body
+    @data["body"] || ""
+  end
+
+end
+
 
 ####blurb               ( .postmortem_body + .incident_updates.body[].join )
 ####keywords            blurb | keyword_extraction()   # use:       https://github.com/domnikl/highscore || https://github.com/louismullie/graph-rank
