@@ -50,3 +50,11 @@ class Keywordable
     end
   end
 end
+
+
+# keywordable from all the blurbs array of incidents
+# (can be any objects with #blurb)
+def get_keywordable_from_blurbs(incidents)
+  megablurb = incidents.map(&:blurb).join("\n\n\n\n")
+  Keywordable.new megablurb
+end

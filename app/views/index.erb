@@ -173,6 +173,16 @@
       </div>
     </div>
   </div>
+
+  </hr>
+
+  <h1>Keywords from all incident blurbs</h1>
+  <p><em><strong><!--TODO(hangtwenty)--> TODO:</strong> Go through this for a couple diff. targets ... noting all the things that are just common 'incident' language (sorry, patience, resolve, solution...) and add to blacklist; what's left? Does it become something good to chart?</em>
+  <table class="table">
+      <%= get_keywordable_from_blurbs(@incidents).to_strings_and_ranks(100).map{|keyword, rank| 
+          "<tr><td>#{keyword}</td><td>#{rank}</td>"
+      }.join("\n") %>
+  </table>
 <% else %>
   <h3>No data yet. Punch in target URL and submit.</h3>
 <% end %>

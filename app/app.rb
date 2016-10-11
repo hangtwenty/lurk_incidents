@@ -15,6 +15,7 @@ require 'chartkick'
 require_relative '../config.rb'
 require_relative '../fetch.rb'
 require_relative '../incident.rb'
+require_relative '../natural_language.rb'
 require_relative '../stat.rb'
 
 Chartkick.options = {
@@ -44,6 +45,9 @@ post '/' do
   @target_url = params[:target_url]
 
   @incidents = get_incidents(@target_url)
+
+  # keywords stuff is completely in index.erb for now.
+  # (so I can sketch w/ charts etc)
 
   # outliers stuff (only used for a couple graphs after all)
   @outliers = {

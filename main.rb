@@ -14,9 +14,7 @@ incidents.each { |incident|
 }
 
 puts "[.] KEYWORD TIME!".green
-megablurb = incidents.map(&:blurb).join("\n\n\n\n")
-puts "[.] length of megablurb = #{megablurb.length.to_s.cyan}"
-keywordable = Keywordable.new megablurb
+keywordable = get_keywordable_from_blurbs(incidents)
 keywordable.to_strings_and_ranks(100).each{|keyword, rank|
     puts "    #{keyword.light_magenta}\t#{rank}"
 }
