@@ -1,4 +1,5 @@
-require 'date'
+require 'active_support'
+require 'active_support/core_ext/object/blank'
 
 require './util.rb'
 
@@ -70,9 +71,9 @@ class Incident
   # (this is more squirrely than you'd think... see tricky_start_time fixture)
   def started_at
     choices = [
-      DateTime.parse(@data["created_at"]),
+      datetime_or_nil(@data["created_at"]),
       *extract_update_datetimes
-    ]
+    ].reject(&:nil?)
     choices.min
   end
 
@@ -99,8 +100,8 @@ class Incident
       # edge case I've seen & want to handle: incident has really ended, 
       # and it's marked 'resolved', but only have 'updated_at' ...
       # Since we already know it's marked resolved, take the earlier one.
-      resolved_at = @data["resolved_at"] && DateTime.parse(@data["resolved_at"])
-      updated_at = @data["updated_at"] && DateTime.parse(@data["updated_at"])
+      resolved_at = @data["resolved_at"] && datetime_or_nil(@data["resolved_at"])
+      updated_at = @data["updated_at"] && datetime_or_nil(@data["updated_at"])
       if resolved_at and updated_at
         return [resolved_at, updated_at].min
       else
@@ -135,17 +136,16 @@ class Incident
 
   # join together plaintext blurbs for all updates 
   def blurb_updates
-    updates.map(&:body)
-        .reject(&:nil?)
-        .reject(&:blank?)
-        .join(BLURB_SEPARATOR)
+    updates
+        .sort_by{|update| update.all_datetimes.reject(&:nil?).min}
+        .map(&:body).reject(&:blank?).join(BLURB_SEPARATOR)
   end
 
   # join together names and descriptions of components
   def blurb_components
     # from API Docs: "key only present if component subscriptions are enabled"
     if @data.key? "components"
-      @data["components"].map{|comp_data|
+      comps = @data["components"].map{|comp_data|
         name = comp_data["name"] || 'unnamed_component'
         desc = comp_data["description"]
         if !desc.nil? && !desc.empty?
@@ -153,7 +153,12 @@ class Incident
         else
           name
         end
-      }.reject(&:nil?).join(", ")
+      }.reject(&:nil?).sort
+      if !comps.empty?
+        "Components affected: #{comps.join(", ")}."
+      else
+        ""
+      end
     else
       ""
     end
@@ -162,9 +167,7 @@ class Incident
   # overall plaintext blurb using incident.name, update blurbs, components
   def blurb
     [name, blurb_updates, postmortem_body, blurb_components]
-        .reject(&:nil?)
-        .reject(&:blank?)
-        .join(BLURB_SEPARATOR)
+        .reject(&:blank?).join(BLURB_SEPARATOR)
   end
 
   # direct field from json, 'postmortem_body'

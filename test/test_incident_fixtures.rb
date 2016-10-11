@@ -104,11 +104,11 @@ class TestIncidentFixtureSpecs < Minitest::Test
         begin
           actual_s = actual.iso8601(3)
         rescue NoMethodError
-          actual_s = actual.to_s
+          actual_s = (actual && actual.to_s) || ""
         end
 
         # make sure it's what we expect (stringify both operands...)
-        assert_equal(actual_s, expected_value.to_s)
+        assert_equal(actual_s.chomp, expected_value.to_s.chomp)
       }
     end
   }
