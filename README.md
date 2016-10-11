@@ -1,8 +1,10 @@
 # what is this?
 
-Ad-hoc analysis of _someone else's_ [StatusPage.io](https://www.statuspage.io/) status page. Why? Well, if you're _in_ the organization, and you've got auth keys, you can just use the (nice) API it gives you. What if you don't have privileges for auth keys? What if you take a look at status page trends from the outside? Maybe you're going to 
+Kind of a shaky premise, but, this was a toy project so I could learn some more Ruby.
 
-This was a toy project so I could learn some more Ruby. 
+It does some ad-hoc analysis of a [StatusPage.io](https://www.statuspage.io/) incident history -- from the public view, not an API call.
+
+Why? Well indeed, [StatusPage.io has a nice API](https://doers.statuspage.io/api/v1/incidents/), and you can use it if you're inside the organization and you are provided with auth keys. What if you're outside, just curious? What if you're inside, but you're waiting on getting access?
 
 ## normal usage
 
