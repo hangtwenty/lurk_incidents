@@ -13,17 +13,17 @@ Why? Well indeed, [StatusPage.io has a nice API](https://doers.statuspage.io/api
     - ... also uses [highscore](https://github.com/domnikl/highscore) to do some keyword analysis on the whole set of incidents. this is shown in a table. (needs further cleanup but it's a start.)
     - run it like `ruby app/app.rb` then go to http://localhost:4567/
 
-- **a script.** script `main.rb` fetches all the incidents...
-    - not super useful in iteslf, except...
-    - in `app.rb`, I didn't do anything fancy with async fetching of all the incidents ... and it takes a couple minutes initially. so, you might want to do `main.rb` against your target at least once before you do `app.rb` way... then `app.rb` will be quick (just fetch any NEW incidents since initial fetch). (messy I know, toy project, yadda yadda)
 - nitty gritty details for running
     - install with `bundle install`. if anything gives you trouble, check out `Gemfile`, there are some marked as `OPTIONAL` (just optimizations for the [`highscore`](https://github.com/domnikl/highscore) library/ natural language features)
-    - currently I assume you are just cloing this repo then running `ruby main.rb` (messy, but, toy)
-
+    - currently I assume you are just cloing this repo, `cd` in, and run from in the directory.
     - configuration is loaded from `./lurk_incidents.yaml` - **you should create this**
         - there's an example for you to start from, `lurk_incidents.yaml.example`
+    - lastly. `main.rb` is a little script, not super useful in itself, but **I recommend you run this first** before `app.rb`.
+        - why: I didn't do anything fancy with async fetching of all the incidents ... so if you just go straight to `app.rb`, it will block for a couple minutes on the first run, or perhaps even time out. (messy I know, toy project, yadda yadda)
+        
+### caveats
 
-### caveat: not meant for anything serious
+not meant for anything serious! also...
 
 #### occasional bugs in the graphs
 
