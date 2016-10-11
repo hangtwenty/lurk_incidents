@@ -8,12 +8,12 @@ Why? Well indeed, [StatusPage.io has a nice API](https://doers.statuspage.io/api
 
 ## normal usage
 
-- **app for charts.** 
-    - there's a little sinatra app to run local and see lots o' graphs of the incidents. graphs use Chartkick.
-    - ... also uses [highscore](https://github.com/domnikl/highscore) to do some keyword analysis on the whole set of incidents. this is shown in a table. (needs further cleanup but it's a start.)
-    - run it like `ruby app/app.rb` then go to http://localhost:4567/
+- **little sinatra app shows you graphs and keywords.** 
+    - various graphs, currently using Chartkick
+    - also does some keyword analysis using [highscore](https://github.com/domnikl/highscore). this is shown in a table. (needs further cleanup but it's a start.)
+    - run it: `ruby app/app.rb` then go to http://localhost:4567/
 
-- nitty gritty details for running
+- prerequisites before running
     - install with `bundle install`. if anything gives you trouble, check out `Gemfile`, there are some marked as `OPTIONAL` (just optimizations for the [`highscore`](https://github.com/domnikl/highscore) library/ natural language features)
     - currently I assume you are just cloing this repo, `cd` in, and run from in the directory.
     - configuration is loaded from `./lurk_incidents.yaml` - **you should create this**
