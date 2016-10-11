@@ -1,6 +1,7 @@
 ## normal usage
 
 - currently I assume you are just cloing this repo then running `ruby main.rb` (I haven't packaged up as a real CLI script, since it feels like a one-off/niche util...)
+- install with `bundle install`. if anything gives you trouble, check out `Gemfile`, there are some marked as `OPTIONAL` (just optimizations for the [`highscore`](https://github.com/domnikl/highscore) library/ natural language features)
 - configuration is loaded from `$( pwd )/lurk_incidents.yaml`.
     - there's an example for you to start from, `lurk_incidents.yaml.example`
 - there's a little chartkick+sinatra app to run local and see lots o' graphs of the incidents.

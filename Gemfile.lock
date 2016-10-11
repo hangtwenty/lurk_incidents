@@ -6,11 +6,16 @@ GEM
       i18n (~> 0.7)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
+    bloomfilter-rb (2.1.1)
+      redis
     chartkick (2.1.1)
     colorize (0.8.1)
     concurrent-ruby (1.0.2)
     domain_name (0.5.20160826)
       unf (>= 0.0.5, < 1.0.0)
+    fast-stemmer (1.0.2)
+    highscore (1.2.1)
+      whatlanguage (>= 1.0.0)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
     i18n (0.7.0)
@@ -36,6 +41,7 @@ GEM
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
+    redis (3.3.1)
     savanna-outliers (0.0.1)
     sinatra (1.4.7)
       rack (~> 1.5)
@@ -51,14 +57,18 @@ GEM
       unf_ext
     unf_ext (0.0.7.2)
     webrobots (0.1.2)
+    whatlanguage (1.0.6)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   activesupport
+  bloomfilter-rb
   chartkick
   colorize
+  fast-stemmer
+  highscore
   mechanize
   minitest
   nokogiri
