@@ -7,7 +7,7 @@ require 'uri'
 
 # other third party
 require 'active_support'
-require 'active_support/core_ext'
+require 'active_support/core_ext/enumerable'
 require 'chartkick'
 #require 'descriptive_statistics/safe'
 
