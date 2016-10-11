@@ -7,7 +7,7 @@ HIGHSCORE_CONFIGURE = lambda {|arg|
   set :ignore_case, true             # => default: false
 
   #TODO get stemming back, it cleans things up; but, how to unstem for display?
-  set :stemming, true                # => default: false 
+  #set :stemming, true                # => default: false 
 }
 
 # TODO(hangtwenty) path to blacklist should be configurable
